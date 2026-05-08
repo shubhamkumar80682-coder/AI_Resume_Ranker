@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | AI Resume Ranker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="navbar-inner">
+        <a href="{{ url_for('dashboard') }}" class="navbar-brand">
+            <span class="brand-icon">&#9776;</span>
+            AI Resume Ranker
+        </a>
+        <div class="navbar-user">
+            <span class="user-email">{{ session.user_email }}</span>
+            <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="page-wrapper">
+    <div class="dashboard-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Upload Section -->
+        <section class="card upload-card">
+            <h2 class="card-title">Upload &amp; Rank</h2>
+            <p class="card-subtitle">Paste a job description and upload resume PDFs to find the best matches.</p>
+
+            <form method="POST" enctype="multipart/form-data" id="rank-form">
+                <div class="form-group">
+                    <label for="job">Job Description</label>
+                    <textarea id="job" name="job" rows="6" placeholder="Paste the full job description here..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="resumes">Resume PDFs</label>
+                    <div class="file-drop" id="file-drop">
+                        <input type="file" id="resumes" name="resumes" multiple accept=".pdf" required>
+                        <div class="file-drop-content">
+                            <span class="file-icon">&#128196;</span>
+                            <p>Click to select files or drag &amp; drop</p>
+                            <small>Accepted format: PDF only</small>
+                        </div>
+                    </div>
+                    <div id="file-list" class="file-list"></div>
+                </div>
+
+                <button type="submit" id="submit-btn" class="btn-submit">
+                    <span class="btn-text">Rank Resumes</span>
+                    <span class="btn-loader" style="display: none;">
+                        <span class="spinner"></span>
+                        Processing...
+                    </span>
+                </button>
+            </form>
+        </section>
+
+        <!-- Results Section -->
+        {% if ranked %}
+        <section class="card results-card">
+            <div class="results-header">
+                <h2 class="card-title">Ranking Results</h2>
+                <span class="results-count">{{ ranked | length }} resume{{ 's' if ranked | length != 1 }}</span>
+            </div>
+
+            <div class="results-list">
+                {% for name, score in ranked %}
+                {% set pct = (score * 100) | round(1) | default(0) %}
+                {% set tier = 'strong' if pct >= 40 else 'partial' if pct >= 15 else 'weak' if pct >= 5 else 'low' %}
+                {% set rank = loop.index %}
+
+                <div class="result-item {{ tier }} {% if rank <= 3 %}top-ranked{% endif %}"
+                     style="animation-delay: {{ loop.index0 * 0.08 }}s">
+
+                    <div class="result-rank">
+                        {% if rank == 1 %}
+                            <span class="medal gold">&#129351;</span>
+                        {% elif rank == 2 %}
+                            <span class="medal silver">&#129352;</span>
+                        {% elif rank == 3 %}
+                            <span class="medal bronze">&#129353;</span>
+                        {% else %}
+                            <span class="rank-num">{{ rank }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="result-info">
+                        <span class="result-name" title="{{ name }}">{{ name }}</span>
+
+                        <div class="progress-bar">
+                            <div class="progress-fill {{ tier }}" style="width: {{ [pct, 100] | min }}%"></div>
+                        </div>
+                    </div>
+
+                    <div class="result-score">
+                        <span class="score-value {{ tier }}">{{ pct }}%</span>
+                        <span class="score-label {{ tier }}">
+                            {% if tier == 'strong' %}Strong Match
+                            {% elif tier == 'partial' %}Partial Match
+                            {% elif tier == 'weak' %}Weak Match
+                            {% else %}No Match{% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% elif request.method == 'POST' %}
+        <section class="card results-card">
+            <div class="empty-state">
+                <span class="empty-icon">&#128196;</span>
+                <h3>No results could be generated</h3>
+                <p>None of the uploaded resumes could be processed. Check the file formats and try again.</p>
+            </div>
+        </section>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('rank-form');
+    const btn = document.getElementById('submit-btn');
+    const btnText = btn.querySelector('.btn-text');
+    const btnLoader = btn.querySelector('.btn-loader');
+
+    form.addEventListener('submit', function () {
+        btn.disabled = true;
+        btnText.style.display = 'none';
+        btnLoader.style.display = 'inline-flex';
+    });
+
+    const fileInput = document.getElementById('resumes');
+    const fileList = document.getElementById('file-list');
+
+    fileInput.addEventListener('change', function () {
+        fileList.innerHTML = '';
+        for (const file of this.files) {
+            const el = document.createElement('div');
+            el.className = 'file-item';
+            el.textContent = file.name;
+            fileList.appendChild(el);
+        }
+    });
+</script>
+
+</body>
+</html>

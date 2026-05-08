@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Ranker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="navbar-inner">
+        <a href="{{ url_for('home') }}" class="navbar-brand">
+            <span class="brand-icon">&#9776;</span>
+            AI Resume Ranker
+        </a>
+    </div>
+</nav>
+
+<div class="page-wrapper">
+    <div class="card" style="text-align: center;">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="hero">
+            <h1>AI Resume Ranker</h1>
+            <p>Upload resumes and match them against any job description using intelligent TF-IDF scoring.</p>
+        </div>
+
+        <div class="home-cta">
+            <a href="{{ url_for('login') }}" class="btn btn-primary">Login</a>
+            <a href="{{ url_for('register') }}" class="btn btn-outline">Create Account</a>
+        </div>
+
+        <div class="features">
+            <div class="feature-card">
+                <h3>Smart Matching</h3>
+                <p>Hybrid TF-IDF scoring that weighs skill importance, not just keyword count.</p>
+            </div>
+            <div class="feature-card">
+                <h3>PDF Processing</h3>
+                <p>Automatic text extraction and cleanup from uploaded resume PDFs.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Instant Rankings</h3>
+                <p>Ranked results with clear match categories — Strong, Partial, Weak, or No Match.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
